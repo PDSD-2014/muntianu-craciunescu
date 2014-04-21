@@ -1,0 +1,220 @@
+package pdsd.dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+import pdsd.beans.Lobby;
+import pdsd.service.ConnectionManager;
+
+public class LobbyDaoImpl implements LobbyDao {
+
+	@Override
+	public Lobby createLobby(Integer userId, String name) {
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Connection conn = null;
+		StringBuffer sb = new StringBuffer();
+		Lobby result = null;
+		try {
+			sb.append("INSERT INTO Lobby (LobbyName, User1, Active, GameEnded, CreateDate) VALUES (?, ?, ?, ?, getdate())");
+			conn = ConnectionManager.getSqlConnection();
+			ps = conn.prepareStatement(sb.toString(),
+					Statement.RETURN_GENERATED_KEYS);
+			ps.setString(1, name);
+			ps.setInt(2, userId);
+			ps.setBoolean(3, true);
+			ps.setBoolean(4, false);
+			ps.executeUpdate();
+			rs = ps.getGeneratedKeys();
+			if (rs.next()) {
+				Integer id = rs.getInt(1);
+				result = new Lobby(userId, name, id);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			ConnectionManager.close(conn, ps, rs);
+		}
+		return result;
+	}
+
+	@Override
+	public boolean joinLobby(Integer userId, String name) {
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Connection conn = null;
+		StringBuffer sb = new StringBuffer();
+		boolean result = true;
+		try {
+			sb.append("SELECT * FROM Lobby WHERE LobbyName = ?");
+			conn = ConnectionManager.getSqlConnection();
+			ps = conn.prepareStatement(sb.toString());
+			ps.setString(1, name);
+			rs = ps.executeQuery();
+			String updateField = "";
+			if (rs.next()) {
+				Integer id1 = rs.getInt("User1");
+				Integer id2 = rs.getInt("User2");
+				Integer id3 = rs.getInt("User3");
+				Integer id4 = rs.getInt("User4");
+				boolean active = rs.getBoolean("Active");
+				boolean gameEnded = rs.getBoolean("GameEnded");
+				if (gameEnded || !active) {
+					result = false;
+				}
+				if (id1 != null && id1.intValue() != 0 && id2 != null
+						&& id2.intValue() != 0 && id3 != null
+						&& id3.intValue() != 0 && id4 != null
+						&& id4.intValue() != 0) {
+					result = false;
+				} else {
+					if (id1 == null || id1.intValue() == 0) {
+						updateField = "User1";
+					} else if (id2 == null || id2.intValue() == 0) {
+						updateField = "User2";
+					} else if (id3 == null || id3.intValue() == 0) {
+						updateField = "User3";
+					} else {
+						updateField = "User4";
+					}
+					updateLobby(updateField, name, userId);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			ConnectionManager.close(conn, ps, rs);
+		}
+		return result;
+	}
+
+	private void updateLobby(String updateField, String name, Integer userId) {
+		PreparedStatement ps = null;
+		Connection conn = null;
+		StringBuffer sb = new StringBuffer();
+		try {
+			conn = ConnectionManager.getSqlConnection();
+			sb.append("UPDATE Lobby SET " + updateField
+					+ " = ? WHERE LobbyName = ?");
+			ps = conn.prepareStatement(sb.toString());
+			ps.setInt(1, userId);
+			ps.setString(2, name);
+			ps.executeUpdate();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			ConnectionManager.close(conn, ps, null);
+		}
+	}
+
+	private void updateLobby(String updateField, Integer lobbyId, Integer userId) {
+		PreparedStatement ps = null;
+		Connection conn = null;
+		StringBuffer sb = new StringBuffer();
+		try {
+			conn = ConnectionManager.getSqlConnection();
+			sb.append("UPDATE Lobby SET " + updateField
+					+ " = ? WHERE LobbyId = ?");
+			ps = conn.prepareStatement(sb.toString());
+			ps.setInt(1, userId);
+			ps.setInt(2, lobbyId);
+			ps.executeUpdate();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			ConnectionManager.close(conn, ps, null);
+		}
+	}
+
+	@Override
+	public boolean joinLobby(Integer userId, Integer lobbyId) {
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Connection conn = null;
+		StringBuffer sb = new StringBuffer();
+		boolean result = true;
+		try {
+			sb.append("SELECT * FROM Lobby WHERE LobbyId = ?");
+			conn = ConnectionManager.getSqlConnection();
+			ps = conn.prepareStatement(sb.toString());
+			ps.setInt(1, lobbyId);
+			rs = ps.executeQuery();
+			String updateField = "";
+			if (rs.next()) {
+				Integer id1 = rs.getInt("User1");
+				Integer id2 = rs.getInt("User2");
+				Integer id3 = rs.getInt("User3");
+				Integer id4 = rs.getInt("User4");
+				boolean active = rs.getBoolean("Active");
+				boolean gameEnded = rs.getBoolean("GameEnded");
+				if (gameEnded || !active) {
+					result = false;
+				}
+				if (id1 != null && id1.intValue() != 0 && id2 != null
+						&& id2.intValue() != 0 && id3 != null
+						&& id3.intValue() != 0 && id4 != null
+						&& id4.intValue() != 0) {
+					result = false;
+				} else {
+					if (id1 == null || id1.intValue() == 0) {
+						updateField = "User1";
+					} else if (id2 == null || id2.intValue() == 0) {
+						updateField = "User2";
+					} else if (id3 == null || id3.intValue() == 0) {
+						updateField = "User3";
+					} else {
+						updateField = "User4";
+					}
+					updateLobby(updateField, lobbyId, userId);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			ConnectionManager.close(conn, ps, rs);
+		}
+		return result;
+	}
+
+	@Override
+	public boolean leaveLobby(Integer userId, Integer lobbyId) {
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Connection conn = null;
+		StringBuffer sb = new StringBuffer();
+		boolean result = true;
+		String updateField = "";
+		try {
+			conn = ConnectionManager.getSqlConnection();
+			sb.append("SELECT * FROM Lobby WHERE LobbyId = ?");
+			ps = conn.prepareStatement(sb.toString());
+			ps.setInt(1, lobbyId);
+			rs = ps.executeQuery();
+			if (rs.next()) {
+				Integer user1 = rs.getInt("User1");
+				Integer user2 = rs.getInt("User2");
+				Integer user3 = rs.getInt("User3");
+				if (user1 != null && user1.intValue() == userId.intValue()) {
+					updateField = "User1";
+				} else if (user2 != null
+						&& user2.intValue() == userId.intValue()) {
+					updateField = "User2";
+				} else if (user3 != null
+						&& user3.intValue() == userId.intValue()) {
+					updateField = "User3";
+				} else {
+					updateField = "User4";
+				}
+				updateLobby(updateField, lobbyId, 0);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			ConnectionManager.close(conn, ps, rs);
+		}
+		return result;
+	}
+
+}

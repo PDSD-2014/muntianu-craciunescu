@@ -55,7 +55,7 @@ public class UserDaoImpl implements UserDao {
 			ps.executeUpdate();
 			rs = ps.getGeneratedKeys();
 			if (rs.next()) {
-				Integer id = rs.getInt("UserId");
+				Integer id = rs.getInt(1);
 				result = new User(id, name, password, login);
 			}
 		} catch (Exception e) {
