@@ -10,17 +10,18 @@ public class Client {
 		BufferedReader input = new BufferedReader(new InputStreamReader(
 				System.in));
 
-		Socket clientSocket = new Socket("localhost", 6789);
-		DataOutputStream serverOutputStream = new DataOutputStream(
-				clientSocket.getOutputStream());
-		BufferedReader serverInputStream = new BufferedReader(
-				new InputStreamReader(clientSocket.getInputStream()));
 		do {
+			Socket clientSocket = new Socket("localhost", 6792);
+			DataOutputStream serverOutputStream = new DataOutputStream(
+					clientSocket.getOutputStream());
+			PrintWriter pw = new PrintWriter(serverOutputStream, true);
+			BufferedReader serverInputStream = new BufferedReader(
+					new InputStreamReader(clientSocket.getInputStream()));
 			command = input.readLine();
-			serverOutputStream.writeBytes(command + '\n');
+			pw.println(command);
 			response = serverInputStream.readLine();
 			System.out.println(response);
 			clientSocket.close();
-		} while (!command.equalsIgnoreCase("end"));
+		} while (!command.equals("end"));
 	}
 }
