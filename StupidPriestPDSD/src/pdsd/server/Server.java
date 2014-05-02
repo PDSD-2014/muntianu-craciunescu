@@ -35,6 +35,7 @@ public class Server {
 					connectionSocket.getOutputStream());
 			PrintWriter pw = new PrintWriter(sendToClient, true);
 			clientSentence = readFromClient.readLine();
+			System.out.println(clientSentence);
 			if (clientSentence.startsWith("LOGIN")) {
 				String[] tokens = clientSentence.split("_");
 				User user = userDao.getUser(tokens[1], tokens[2]);
