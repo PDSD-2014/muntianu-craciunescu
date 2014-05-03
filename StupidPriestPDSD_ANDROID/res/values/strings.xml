@@ -25,6 +25,20 @@
     <string name="register_confirm_password">Password</string>
     <string name="register_button">Sign Up</string>
     <string name="link_to_login"></string>
-    <!-- RegisterActivity End -->
+    <!-- RegisterActivity Ends -->
+
+
+    <!-- LobbyActivity Start -->
+    <string name="lobby_refresh">Refresh Lobby List</string>
+    <string name="lobby_join">Join</string>
+    <string name="lobby_listView">ListView</string>
+    <string name="lblListHeader">lblListHeader</string>
+    <string name="title_activity_lobby_room_activty">LobbyRoomActivty</string>
+    <!-- LobbyActivity Ends -->
+
+
+    <!-- LobbyRoom Start -->
+    <string name="room_textview"></string>
+    <!-- LobbyRoom Ends -->
 
 </resources>
