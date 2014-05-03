@@ -98,7 +98,7 @@ public class LoginActivity extends Activity {
 					
 					String outWritten = "LOGIN_" + email + "_" + password;
 					out.println(outWritten);
-					Log.i("AsyncTask", "Wrote in Socket" + outWritten);
+					Log.i("AsyncTask", "Wrote in Socket:" + outWritten);
 
 
 					BufferedReader in;
@@ -111,7 +111,7 @@ public class LoginActivity extends Activity {
 					out.close();
 					in.close();
 					
-					Log.i("AsyncTask", "Recv_message" + Message);
+					Log.i("AsyncTask", "Recv_message:" + Message);
 					return Message;
 					
 

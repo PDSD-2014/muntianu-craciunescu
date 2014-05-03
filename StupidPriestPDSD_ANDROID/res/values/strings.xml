@@ -9,12 +9,22 @@
     <string name="title_activity_lobyy">LobyyActivity</string>
     <string name="title_activity_end_game">EndGame</string>
     <string name="title_activity_play_game">PlayGame</string>
-    
-     <string name="Email">Email</string>
-     <string name="Password">Password</string>
-     <string name="LoginButton">Login</string>
-     <string name="link_to_register">New to StupidPriest? Register here</string>
-     <string name="link_to_login"></string>
-   
 
-</resources>     
+    <!-- LoginActivity Start -->
+    <string name="Email">Email</string>
+    <string name="Password">Password</string>
+    <string name="LoginButton">Login</string>
+    <string name="link_to_register">New to StupidPriest? Register here</string>
+    <!-- LoginActivity Ends -->
+
+
+    <!-- RegisterActivity Start -->
+    <string name="textViewUp"></string>
+    <string name="register_email">Email</string>
+    <string name="register_password">Password</string>
+    <string name="register_confirm_password">Password</string>
+    <string name="register_button">Sign Up</string>
+    <string name="link_to_login"></string>
+    <!-- RegisterActivity End -->
+
+</resources>

@@ -1,64 +1,159 @@
 package com.example.stupidpriest;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
+
 import android.app.Activity;
-import android.app.ActionBar;
-import android.app.Fragment;
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.os.Build;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
 public class RegisterActivity extends Activity {
+
+	EditText email, password, confirmedPasword;
+	TextView displayStatus;
+	Button registerButton;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_register);
 
-		if (savedInstanceState == null) {
-			getFragmentManager().beginTransaction()
-					.add(R.id.container, new PlaceholderFragment()).commit();
-		}
-	}
+		displayStatus = (TextView) findViewById(R.id.textViewUp);
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
+		email = (EditText) findViewById(R.id.register_email);
+		password = (EditText) findViewById(R.id.register_password);
+		confirmedPasword = (EditText) findViewById(R.id.register_confirm_password);
 
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.register, menu);
-		return true;
-	}
+		registerButton = (Button) findViewById(R.id.register_button);
+		registerButton.setOnClickListener(new View.OnClickListener() {
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
-	}
+			@Override
+			public void onClick(View v) {
+				String inputEmail = "";
+				if (email.getText() != null) {
+					inputEmail = email.getText().toString();
+				}
 
-	/**
-	 * A placeholder fragment containing a simple view.
-	 */
-	public static class PlaceholderFragment extends Fragment {
+				String inputPassword = "";
+				if (password.getText() != null) {
+					inputPassword = password.getText().toString();
+				}
 
-		public PlaceholderFragment() {
+				String inputConfirmedPassword = "";
+				if (confirmedPasword != null) {
+					inputConfirmedPassword = confirmedPasword.getText()
+							.toString();
+				}
+
+				if (inputPassword.equals(inputConfirmedPassword) != true) {
+					displayStatus.setText("Password Mismatch.ReEnterPassword");
+					displayStatus.setTextColor(Color.parseColor("#ffff0000"));
+
+					Log.i("RegisterActivity", "Clearing text");
+					confirmedPasword.setText("");
+					password.setText("");
+				}
+
+				String[] params = { inputEmail, inputPassword };
+				new NetworkRegister().execute(params);
+
+			}// onCliclEnds
+		});// ListenerEnds
+
+	}// onCreate
+
+	class NetworkRegister extends AsyncTask<String, Integer, String> {
+
+		@Override
+		protected void onPreExecute() {
+			Log.i("AsyncTaskRegister", "onPreExecute");
 		}
 
 		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container,
-				Bundle savedInstanceState) {
-			View rootView = inflater.inflate(R.layout.fragment_register,
-					container, false);
-			return rootView;
-		}
-	}
+		protected String doInBackground(String... params) {
 
-}
+			String email = params[0];
+			String password = params[1];
+			// TODO Auto-generated method stub
+			boolean result = false;
+			Socket sockfd;
+			try {
+				SocketAddress sockaddr = new InetSocketAddress("192.168.137.1",
+						6792);
+				sockfd = new Socket();
+				sockfd.connect(sockaddr);
+				if (sockfd.isConnected()) {
+
+					Log.i("AsyncTaskRegister",
+							"doInBackground: Socket created, streams assigned");
+
+					PrintWriter out = new PrintWriter(new BufferedWriter(
+							new OutputStreamWriter(sockfd.getOutputStream())),
+							true);
+
+					String outWritten = "REGISTER_" + email + "_" + password;
+					out.println(outWritten);
+					Log.i("AsyncTaskRegister", "Wrote in Socket:" + outWritten);
+
+					BufferedReader in;
+					in = new BufferedReader(new InputStreamReader(
+							sockfd.getInputStream()));
+
+					String Message = in.readLine();
+
+					out.close();
+					in.close();
+
+					Log.i("AsyncTaskRegister", "Recv_message:" + Message);
+					return Message;
+
+				}
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+
+			}
+			return null;
+
+		}//do in background
+
+		protected void onPostExecute(String result) {
+
+			if (result.equals("VALID_REGISTRATION")) {
+				Log.i("AsyncTaskRegister","Registration Succed");
+				Intent i = new Intent(getApplicationContext(),
+						LoginActivity.class);
+
+				startActivity(i);
+
+			}
+			else
+			{
+				Log.i("AsyncTaskRegister","Registration Failed");
+				email.setText("");
+				confirmedPasword.setText("");
+				password.setText("");
+				
+				displayStatus.setTextColor(Color.parseColor("#ffff0000"));
+				displayStatus.setText("Server Responded with "+result+" Please try again later\nEnter your email");
+				
+			
+			}
+			
+		}//on postExecute
+
+	}//class NetworkRegister
+}//class
