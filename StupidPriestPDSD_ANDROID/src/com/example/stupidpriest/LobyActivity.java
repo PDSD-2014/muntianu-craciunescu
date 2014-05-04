@@ -74,28 +74,16 @@ public class LobyActivity extends Activity {
 
 			@Override
 			public void onClick(View v) {
-				List<String> players = ((MyExpandableListAdapter) listAdapter)
-						.getChildList(LastClickedOn);
 
-				// CONSTRUCT passed param for intent
-				String passedParam = "";
-				for (String s : players) {
-					passedParam += s + "_";
-				}
-				//TODO
-				//Send a joinLobby message to server
-				
-				//passingParams
-				Intent i = new Intent(getApplicationContext(),
-						LobbyRoomActivty.class);
-				i.putExtra("players", passedParam);
-				startActivity(i);
-				
-			}// onClick
+				String groupName = (String) ((MyExpandableListAdapter) listAdapter)
+						.getGroup((int) LastClickedOn);
+				String[] params = { groupName };
+				new NetworkJoinLobby().execute(params);
+			}
 		});// setOnClickListener
 
 	}// onCreate
-
+	/****************************************************************************************/
 	// necessary for initial population of the ExpandableList
 	private void setUpList() {
 		listDataHeader = new ArrayList<String>();
@@ -111,6 +99,7 @@ public class LobyActivity extends Activity {
 
 	}
 
+	/****************************************************************************************/
 	class NetworkLobby extends AsyncTask<String, Integer, String> {
 
 		@Override
@@ -191,5 +180,84 @@ public class LobyActivity extends Activity {
 		}// onPostExecute
 
 	}// class NetworkLobby
+
+	/****************************************************************************************/
+	class NetworkJoinLobby extends AsyncTask<String, Integer, String> {
+
+		@Override
+		protected void onPreExecute() {
+			Log.i("AsyncTask_NetworkJoinLobby", "onPreExecute");
+		}
+
+		@Override
+		protected String doInBackground(String... params) {
+			String lobbyName = params[0];
+			// TODO Auto-generated method stub
+			boolean result = false;
+			Socket sockfd;
+			try {
+				SocketAddress sockaddr = new InetSocketAddress("192.168.137.1",
+						6792);
+				sockfd = new Socket();
+				sockfd.connect(sockaddr);
+				if (sockfd.isConnected()) {
+
+					Log.i("AsyncTask_NetworkJoinLobby",
+							"doInBackground: Socket created, streams assigned");
+
+					PrintWriter out = new PrintWriter(new BufferedWriter(
+							new OutputStreamWriter(sockfd.getOutputStream())),
+							true);
+
+					String outWritten = "JOINLOBBY_" + lobbyName;
+					out.println(outWritten);
+					Log.i("AsyncTask_NetworkJoinLobby", "Wrote in Socket:"
+							+ outWritten);
+
+					BufferedReader in;
+					in = new BufferedReader(new InputStreamReader(
+							sockfd.getInputStream()));
+					// String translation = in.readLine();
+
+					String Message = in.readLine();
+
+					out.close();
+					in.close();
+
+					Log.i("AsyncTask_NetworkJoinLobby", "Recv_message:"
+							+ Message);
+					return Message;
+
+				}
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+
+			}
+			return null;
+		}
+
+		protected void onPostExecute(String result) {
+
+			if (result.equals("JOIN_OK")) {
+				Log.i("AsyncTask_NetworkJoinLobby", "JOIN_OK:");
+				// CONSTRUCT  param for intent
+				List<String> players = ((MyExpandableListAdapter) listAdapter)
+						.getChildList(LastClickedOn);
+				String passedParam = "";
+				for (String s : players) {
+					passedParam += s + "_";
+				}
+
+				// passingParams
+				Intent i = new Intent(getApplicationContext(),
+						LobbyRoomActivty.class);
+				i.putExtra("players", passedParam);
+				startActivity(i);
+			} else {
+				Log.i("AsyncTask_NetworkJoinLobby", "JOIN_NOTOK:");
+			}
+
+		}
+	}// class NetworkJoinLobby
 
 }// class
