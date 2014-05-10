@@ -21,6 +21,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.OnGroupClickListener;
 
@@ -33,9 +34,11 @@ public class LobyActivity extends Activity {
 	Button refreshButton;
 
 	Button joinLobby;
-
+	Button createLobby;
+	EditText newLobbyName;
 	long LastClickedOn;
-
+	
+	String globalUsername="GIGI";
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -82,7 +85,25 @@ public class LobyActivity extends Activity {
 			}
 		});// setOnClickListener
 
+		/************* Create Lobby Button ************************/
+		newLobbyName = (EditText) findViewById(R.id.editText_createLobby);
+
+		createLobby = (Button) findViewById(R.id.lobby_create);
+		createLobby.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+
+				String groupName = (String) ((MyExpandableListAdapter) listAdapter)
+						.getGroup((int) LastClickedOn);
+				String lobbyName = newLobbyName.getText().toString();
+				String[] params = { lobbyName };
+				new NetworkCreateLobby().execute(params);
+			}
+		});// setOnClickListener
+
 	}// onCreate
+
 	/****************************************************************************************/
 	// necessary for initial population of the ExpandableList
 	private void setUpList() {
@@ -124,7 +145,7 @@ public class LobyActivity extends Activity {
 							new OutputStreamWriter(sockfd.getOutputStream())),
 							true);
 
-					String outWritten = "GETLOBBY";
+					String outWritten = "GETLOBBIES";
 					out.println(outWritten);
 					Log.i("AsyncTask_NetworkLobby", "Wrote in Socket:"
 							+ outWritten);
@@ -209,7 +230,7 @@ public class LobyActivity extends Activity {
 							new OutputStreamWriter(sockfd.getOutputStream())),
 							true);
 
-					String outWritten = "JOINLOBBY_" + lobbyName;
+					String outWritten = "JOINLOBBY_" +globalUsername+"_"+ lobbyName;
 					out.println(outWritten);
 					Log.i("AsyncTask_NetworkJoinLobby", "Wrote in Socket:"
 							+ outWritten);
@@ -240,7 +261,7 @@ public class LobyActivity extends Activity {
 
 			if (result.equals("JOIN_OK")) {
 				Log.i("AsyncTask_NetworkJoinLobby", "JOIN_OK:");
-				// CONSTRUCT  param for intent
+				// CONSTRUCT param for intent
 				List<String> players = ((MyExpandableListAdapter) listAdapter)
 						.getChildList(LastClickedOn);
 				String passedParam = "";
@@ -259,5 +280,69 @@ public class LobyActivity extends Activity {
 
 		}
 	}// class NetworkJoinLobby
+
+	class NetworkCreateLobby extends AsyncTask<String, Integer, String> {
+		@Override
+		protected void onPreExecute() {
+			Log.i("AsyncTask_NetworkCreateLobby", "onPreExecute");
+		}
+
+		@Override
+		protected String doInBackground(String... params) {
+			String name = params[0];
+			Socket sockfd;
+			try {
+				SocketAddress sockaddr = new InetSocketAddress("192.168.137.1",
+						6792);
+				sockfd = new Socket();
+				sockfd.connect(sockaddr);
+				if (sockfd.isConnected()) {
+
+					Log.i("AsyncTask_NetworkCreateLobby",
+							"doInBackground: Socket created, streams assigned");
+
+					PrintWriter out = new PrintWriter(new BufferedWriter(
+							new OutputStreamWriter(sockfd.getOutputStream())),
+							true);
+
+					String outWritten = "NEWLOBBY_"+globalUsername+"_" + name;
+					out.println(outWritten);
+					Log.i("AsyncTask_NetworkCreateLobby", "Wrote in Socket:" + outWritten);
+
+					BufferedReader in;
+					in = new BufferedReader(new InputStreamReader(
+							sockfd.getInputStream()));
+					// String translation = in.readLine();
+
+					String Message = in.readLine();
+
+					out.close();
+					in.close();
+
+					Log.i("AsyncTask_NetworkCreateLobby", "Recv_message:" + Message);
+					return Message;
+
+				}
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+
+			}
+			return null;
+		}
+
+		protected void onPostExecute(String result) {
+			if(result.startsWith("OK_")){
+				Log.i("AsyncTask_NetworkCreateLobby","OnPostExecute createOk ");
+				String passedParam=globalUsername;
+				Intent i = new Intent(getApplicationContext(),
+						LobbyRoomActivty.class);
+				i.putExtra("players", passedParam);
+				startActivity(i);
+			}
+			else{
+				Log.i("AsyncTask_NetworkCreateLobby","OnPostExecute create Errror:  "+result);
+			}
+		}
+	}
 
 }// class
