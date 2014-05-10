@@ -1,12 +1,13 @@
 package pdsd.beans;
 
 import pdsd.enums.CardColor;
+import pdsd.enums.CardNumber;
 
 public class Card {
 
 	private CardColor color;
 
-	private Integer value;
+	private CardNumber number;
 
 	public CardColor getColor() {
 		return color;
@@ -16,12 +17,12 @@ public class Card {
 		this.color = color;
 	}
 
-	public Integer getValue() {
-		return value;
+	public CardNumber getNumber() {
+		return number;
 	}
 
-	public void setValue(Integer value) {
-		this.value = value;
+	public void setNumber(CardNumber number) {
+		this.number = number;
 	}
 
 }
