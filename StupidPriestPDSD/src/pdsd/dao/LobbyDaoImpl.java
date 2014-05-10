@@ -77,7 +77,12 @@ public class LobbyDaoImpl implements LobbyDao {
 					} else {
 						updateField = "User4";
 					}
-					updateLobby(updateField, name, userId);
+					if (id1.intValue() != userId.intValue()
+							&& id2.intValue() != userId.intValue()
+							&& id3.intValue() != userId.intValue()
+							&& id4.intValue() != userId.intValue()) {
+						updateLobby(updateField, name, userId);
+					}
 				}
 			}
 		} catch (Exception e) {
