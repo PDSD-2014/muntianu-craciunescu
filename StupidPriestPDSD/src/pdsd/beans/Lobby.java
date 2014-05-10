@@ -38,6 +38,10 @@ public class Lobby {
 		return true;
 	}
 
+	public ArrayList<Integer> getUsers() {
+		return users;
+	}
+
 	public String getLobbyName() {
 		return lobbyName;
 	}

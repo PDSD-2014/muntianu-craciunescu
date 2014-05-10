@@ -1,5 +1,7 @@
 package pdsd.dao;
 
+import java.util.ArrayList;
+
 import pdsd.beans.Lobby;
 
 public interface LobbyDao {
@@ -11,5 +13,9 @@ public interface LobbyDao {
 	public boolean joinLobby(Integer userId, Integer lobbyId);
 
 	public boolean leaveLobby(Integer userId, Integer lobbyId);
+
+	public Lobby getLobby(Integer lobbyId);
+	
+	public ArrayList<Lobby> getAllLobbies();
 
 }

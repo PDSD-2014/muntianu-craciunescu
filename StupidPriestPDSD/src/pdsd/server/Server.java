@@ -1,8 +1,14 @@
 package pdsd.server;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 import pdsd.beans.Lobby;
 import pdsd.beans.User;
@@ -20,6 +26,8 @@ public class Server {
 	private static HashMap<Integer, User> playersMap = new HashMap<Integer, User>();
 
 	private static HashMap<Integer, Lobby> lobbyMap = new HashMap<Integer, Lobby>();
+
+	private static HashMap<Integer, Socket> clients = new HashMap<Integer, Socket>();
 
 	@SuppressWarnings("resource")
 	public static void main(String args[]) throws Exception {
@@ -40,8 +48,9 @@ public class Server {
 				String[] tokens = clientSentence.split("_");
 				User user = userDao.getUser(tokens[1], tokens[2]);
 				if (user != null && user.getUserId() != null) {
-					response = "VALID_AUTH";
+					response = "VALID_AUTH: userid=" + user.getUserId();
 					playersMap.put(user.getUserId(), user);
+					clients.put(user.getUserId(), connectionSocket);
 				} else {
 					response = "INVALID_AUTH";
 				}
@@ -79,6 +88,9 @@ public class Server {
 				boolean ok = lobbyDao.joinLobby(userId, lobbyId);
 				if (ok) {
 					Lobby currentLobby = lobbyMap.get(lobbyId);
+					if (currentLobby == null) {
+						currentLobby = lobbyDao.getLobby(lobbyId);
+					}
 					currentLobby.addUser(userId);
 					lobbyMap.put(lobbyId, currentLobby);
 					response = "JOIN_OK";
@@ -99,8 +111,47 @@ public class Server {
 				} else {
 					response = "ERROR";
 				}
+			} else if (clientSentence.startsWith("START")) {
+				String[] tokens = clientSentence.split("_");
+				if (tokens.length < 2) {
+					response = "START_NOLOBBY";
+				} else {
+					Integer lobbyId = Integer.parseInt(tokens[1]);
+					startGame(lobbyId);
+					response = "START_OK";
+					Set<Integer> keys = clients.keySet();
+					for (Integer key : keys) {
+						Socket sock = clients.get(key);
+						DataOutputStream sendBcast = new DataOutputStream(
+								sock.getOutputStream());
+						PrintWriter pwBcast = new PrintWriter(sendBcast, true);
+						pwBcast.println(response);
+					}
+				}
+			} else if (clientSentence.startsWith("GETLOBBIES")) {
+				ArrayList<Lobby> allLobbies = lobbyDao.getAllLobbies();
+				response = "";
+				for (Lobby lobby : allLobbies) {
+					response += lobby.getLobbyName() + "-";
+					ArrayList<User> lobbyUsers = userDao.getUsersByLobby(lobby
+							.getLobbyId());
+					for (User user : lobbyUsers) {
+						response += user.getUsername() + "_";
+					}
+					response = response.substring(0, response.length() - 1);
+					response += "=";
+				}
+				response = response.substring(0, response.length() - 1);
 			}
 			pw.println(response);
 		}
+	}
+
+	private static void startGame(Integer lobbyId) {
+		Lobby lobby = lobbyMap.get(lobbyId);
+		if (lobby == null) {
+			lobby = lobbyDao.getLobby(lobbyId);
+		}
+
 	}
 }
