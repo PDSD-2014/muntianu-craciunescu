@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.stupidpriest"
     android:versionCode="1"
+ 	
     android:versionName="1.0" >
 
     <uses-sdk
@@ -17,14 +18,12 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name="com.example.stupidpriest.LoginActivity"
-            android:label="@string/title_activity_login" >
-            
-             <intent-filter>
+            android:label="StupidPriest" >
+            <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            
         </activity>
         <activity
             android:name="com.example.stupidpriest.RegisterActivity"
@@ -35,12 +34,16 @@
             android:label="@string/title_activity_lobyy" >
         </activity>
         <activity
-            android:name="com.example.stupidpriest.EndGame"
+            android:name="com.example.stupidpriest.EndGameActivity"
             android:label="@string/title_activity_end_game" >
         </activity>
         <activity
-            android:name="com.example.stupidpriest.PlayGame"
+            android:name="com.example.stupidpriest.PlayGameActivity"
             android:label="@string/title_activity_play_game" >
+        </activity>
+        <activity
+            android:name="com.example.stupidpriest.LobbyRoomActivty"
+            android:label="@string/title_activity_lobby_room_activty" >
         </activity>
     </application>
 
