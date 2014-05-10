@@ -44,7 +44,6 @@
     <string name="romm_lobbyName"></string>
     <string name="romm_leaveBTN">Leave Lobby</string>
     <string name="romm_startNowBTN">START NOW</string>
-    <string name="romm_waitBTN">Wait for other players</string>
     <string name="room_listview"></string>
     <!-- LobbyRoom Ends -->
 

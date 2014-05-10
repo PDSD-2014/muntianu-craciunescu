@@ -275,6 +275,7 @@ public class LobyActivity extends Activity {
 				// passingParams
 				Intent i = new Intent(getApplicationContext(),
 						LobbyRoomActivty.class);
+				
 				i.putExtra("userId",globalUsername);
 				i.putExtra("players", passedParam);
 				i.putExtra("lobbyName", globallobbyName);

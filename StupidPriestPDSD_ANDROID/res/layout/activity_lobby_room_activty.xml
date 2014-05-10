@@ -43,7 +43,6 @@
                 android:gravity="center"
                 android:text="@string/romm_lobbyName"
                 android:textColor="#572c24"
-               
                 android:textSize="20sp" />
 
             <ListView
@@ -59,13 +58,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dip"
                 android:text="@string/romm_startNowBTN" />
-
-            <Button
-                android:id="@+id/romm_waitBTN"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dip"
-                android:text="@string/romm_waitBTN" />
 
             <Button
                 android:id="@+id/romm_leaveBTN"

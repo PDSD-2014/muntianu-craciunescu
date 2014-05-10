@@ -11,8 +11,11 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -28,9 +31,11 @@ public class LobbyRoomActivty extends Activity {
 	List<String> players;
 	String globalUsername = "";
 	String hostIp = "192.168.137.211";
-
+	String lobbyName;
 	TextView tw;
 	Button leaveBTN;
+	Button startNowBTN;
+	private ProgressDialog pdia;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +45,7 @@ public class LobbyRoomActivty extends Activity {
 		/****************************************************************************************/
 		globalUsername = getIntent().getStringExtra("userId");
 		String playersConnected = getIntent().getStringExtra("players");
-		final String lobbyName = getIntent().getStringExtra("lobbyName");
+		lobbyName = getIntent().getStringExtra("lobbyName");
 		String text = "LobbyName=" + lobbyName + "\n";
 		// text += passedParam;
 		/****************************************************************************************/
@@ -55,8 +60,8 @@ public class LobbyRoomActivty extends Activity {
 				android.R.layout.simple_list_item_1, players);
 		listview.setAdapter(adapter);
 		tw.setText(text);
-		/****************************************************************************************/
-		leaveBTN=(Button)findViewById(R.id.romm_leaveBTN);
+		/*********************** Leave button ******************************************************/
+		leaveBTN = (Button) findViewById(R.id.romm_leaveBTN);
 		leaveBTN.setOnClickListener((new View.OnClickListener() {
 
 			@Override
@@ -65,7 +70,19 @@ public class LobbyRoomActivty extends Activity {
 				String[] params = { lobbyName };
 				new NetworkLeaveLobby().execute(params);
 			}
-			
+
+		}));
+		/*********************** Start now button **************************************************/
+		startNowBTN = (Button) findViewById(R.id.romm_startNowBTN);
+		startNowBTN.setOnClickListener((new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				String[] params = { lobbyName };
+				new NetworkStartGameNow().execute(params);
+			}
+
 		}));
 	}// on create
 
@@ -74,6 +91,7 @@ public class LobbyRoomActivty extends Activity {
 		@Override
 		protected void onPreExecute() {
 			Log.i("AsyncTask_NetworkLeaveLobby", "onPreExecute");
+
 		}
 
 		@Override
@@ -93,7 +111,7 @@ public class LobbyRoomActivty extends Activity {
 							new OutputStreamWriter(sockfd.getOutputStream())),
 							true);
 
-					String outWritten = "LEAVELOBBY_" + globalUsername+"_"
+					String outWritten = "LEAVELOBBY_" + globalUsername + "_"
 							+ lobbyRoomName;
 					out.println(outWritten);
 					Log.i("AsyncTask_NetworkLeaveLobby", "Wrote in Socket:"
@@ -137,4 +155,95 @@ public class LobbyRoomActivty extends Activity {
 			}
 		}
 	}// leaveLobby Async Task
+
+	/****************************************************************************************/
+	class NetworkStartGameNow extends AsyncTask<String, String, String> {
+
+		private final ReentrantLock lock = new ReentrantLock();
+		private final Condition tryAgain = lock.newCondition();
+		private volatile boolean finished = false;
+
+		@Override
+		protected void onPreExecute() {
+			Log.i("AsyncTask_NetworkLeaveLobby", "onPreExecute");
+			pdia = ProgressDialog.show(LobbyRoomActivty.this, "Waiting",
+					"ALL PLAYERS SHOULD BE CONNECTED", true, false);
+			pdia.setMessage("WAITING For all other players to be ready....");
+			pdia.show();
+		}
+
+		@Override
+		protected String doInBackground(String... params) {
+			String lobbyRoomName = params[0];
+			Socket sockfd;
+			try {
+				SocketAddress sockaddr = new InetSocketAddress(hostIp, 6792);
+				sockfd = new Socket();
+				sockfd.connect(sockaddr);
+				if (sockfd.isConnected()) {
+
+					Log.i("AsyncTask_NetworkLeaveLobby",
+							"doInBackground: Socket created, streams assigned");
+
+					PrintWriter out = new PrintWriter(new BufferedWriter(
+							new OutputStreamWriter(sockfd.getOutputStream())),
+							true);
+
+					String outWritten = "START_" + lobbyRoomName + "_"
+							+ globalUsername;
+					out.println(outWritten);
+					Log.i("AsyncTask_NetworkLeaveLobby", "Wrote in Socket:"
+							+ outWritten);
+
+					BufferedReader in;
+					in = new BufferedReader(new InputStreamReader(
+							sockfd.getInputStream()));
+					// String translation = in.readLine();
+					while (true) {
+						String Message = in.readLine();
+						if (Message != null) {
+							Log.i("AsyncTask_NetworkLeaveLobby",
+									"Recv_message:" + Message);
+							if (Message.startsWith("START_OK:CARDS")) {
+								out.close();
+								in.close();
+								sockfd.close();
+								return Message;
+							}
+						}else
+							Thread.sleep(200);
+					}
+
+				}
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return null;
+		}
+
+		protected void onPostExecute(String result) {
+			pdia.dismiss();
+			if (result.startsWith("START_OK")) {
+				Log.i("AsyncTask_NetworkLeaveLobby", "OnPostExecute leave OK ");
+				Intent i = new Intent(getApplicationContext(),
+						PlayGameActivity.class);
+
+				String cards = result.split("CARDS_")[1];
+				i.putExtra("cards", cards);
+				i.putExtra("lobbyName", lobbyName);
+				i.putExtra("userId", globalUsername);
+				startActivity(i);
+			} else {
+				Log.i("AsyncTask_NetworkLeaveLobby",
+						"OnPostExecute create Errror:  " + result);
+				tw.setText(result);
+				// tw.setBackground(background);
+			}
+		}
+	}// leaveLobby Async Task
+
 }// class
