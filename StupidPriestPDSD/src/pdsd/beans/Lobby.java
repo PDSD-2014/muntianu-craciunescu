@@ -6,6 +6,8 @@ public class Lobby {
 
 	private ArrayList<Integer> users;
 
+	private ArrayList<Integer> usersStarted;
+
 	private String lobbyName;
 
 	private Integer lobbyId;
@@ -56,5 +58,16 @@ public class Lobby {
 
 	public void setLobbyId(Integer lobbyId) {
 		this.lobbyId = lobbyId;
+	}
+
+	public ArrayList<Integer> getUsersStarted() {
+		if(usersStarted == null){
+			usersStarted = new ArrayList<Integer>();
+		}
+		return usersStarted;
+	}
+
+	public void setUsersStarted(ArrayList<Integer> usersStarted) {
+		this.usersStarted = usersStarted;
 	}
 }

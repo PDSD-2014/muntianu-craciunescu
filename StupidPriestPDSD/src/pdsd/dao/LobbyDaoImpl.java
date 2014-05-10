@@ -25,7 +25,7 @@ public class LobbyDaoImpl implements LobbyDao {
 					Statement.RETURN_GENERATED_KEYS);
 			ps.setString(1, name);
 			ps.setInt(2, userId);
-			ps.setBoolean(3, true);
+			ps.setBoolean(3, false);
 			ps.setBoolean(4, false);
 			ps.executeUpdate();
 			rs = ps.getGeneratedKeys();
@@ -42,12 +42,12 @@ public class LobbyDaoImpl implements LobbyDao {
 	}
 
 	@Override
-	public boolean joinLobby(Integer userId, String name) {
+	public Integer joinLobby(Integer userId, String name) {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		Connection conn = null;
 		StringBuffer sb = new StringBuffer();
-		boolean result = true;
+		Integer result = 0;
 		try {
 			sb.append("SELECT * FROM Lobby WHERE LobbyName = ?");
 			conn = ConnectionManager.getSqlConnection();
@@ -60,16 +60,13 @@ public class LobbyDaoImpl implements LobbyDao {
 				Integer id2 = rs.getInt("User2");
 				Integer id3 = rs.getInt("User3");
 				Integer id4 = rs.getInt("User4");
-				boolean active = rs.getBoolean("Active");
-				boolean gameEnded = rs.getBoolean("GameEnded");
-				if (gameEnded || !active) {
-					result = false;
-				}
+				result = rs.getInt("LobbyId");
+
 				if (id1 != null && id1.intValue() != 0 && id2 != null
 						&& id2.intValue() != 0 && id3 != null
 						&& id3.intValue() != 0 && id4 != null
 						&& id4.intValue() != 0) {
-					result = false;
+					result = 0;
 				} else {
 					if (id1 == null || id1.intValue() == 0) {
 						updateField = "User1";
@@ -168,7 +165,12 @@ public class LobbyDaoImpl implements LobbyDao {
 					} else {
 						updateField = "User4";
 					}
-					updateLobby(updateField, lobbyId, userId);
+					if (id1.intValue() != userId.intValue()
+							&& id2.intValue() != userId.intValue()
+							&& id3.intValue() != userId.intValue()
+							&& id4.intValue() != userId.intValue()) {
+						updateLobby(updateField, lobbyId, userId);
+					}
 				}
 			}
 		} catch (Exception e) {
@@ -253,6 +255,30 @@ public class LobbyDaoImpl implements LobbyDao {
 	}
 
 	@Override
+	public Integer getLobbyByName(String lobbyName) {
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Connection conn = null;
+		StringBuffer sb = new StringBuffer();
+		Integer result = 0;
+		try {
+			conn = ConnectionManager.getSqlConnection();
+			sb.append("SELECT * FROM Lobby WHERE LobbyName = ?");
+			ps = conn.prepareStatement(sb.toString());
+			ps.setString(1, lobbyName);
+			rs = ps.executeQuery();
+			if (rs.next()) {
+				result = rs.getInt("LobbyId");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			ConnectionManager.close(conn, ps, rs);
+		}
+		return result;
+	}
+
+	@Override
 	public ArrayList<Lobby> getAllLobbies() {
 		ArrayList<Lobby> allLobbies = new ArrayList<Lobby>();
 		PreparedStatement ps = null;
@@ -260,7 +286,7 @@ public class LobbyDaoImpl implements LobbyDao {
 		Connection conn = ConnectionManager.getSqlConnection();
 		try {
 			StringBuffer sb = new StringBuffer();
-			sb.append("SELECT * FROM Lobby");
+			sb.append("SELECT * FROM Lobby WHERE Active = 0 AND GameEnded = 0");
 			ps = conn.prepareStatement(sb.toString());
 			rs = ps.executeQuery();
 			while (rs.next()) {

@@ -5,8 +5,8 @@ import java.net.*;
 
 public class Client {
 	public static void main(String argv[]) throws Exception {
-		String command;
-		String response;
+		String command = "";
+		String response  = "";
 		BufferedReader input = new BufferedReader(new InputStreamReader(
 				System.in));
 		do {
@@ -16,8 +16,11 @@ public class Client {
 			PrintWriter pw = new PrintWriter(serverOutputStream, true);
 			BufferedReader serverInputStream = new BufferedReader(
 					new InputStreamReader(clientSocket.getInputStream()));
-			command = input.readLine();
+			if( response != null && !response.equals("WAITING")){
+				command = input.readLine();
+			}
 			pw.println(command);
+			pw.flush();
 			response = serverInputStream.readLine();
 			System.out.println(response);
 			clientSocket.close();
