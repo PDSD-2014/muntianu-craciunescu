@@ -21,7 +21,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 public class LoginActivity extends Activity {
-
+	String hostIp="192.168.137.211";
 	TextView registerScreen;
 	Button loginButton;
 	EditText email, password;
@@ -83,7 +83,7 @@ public class LoginActivity extends Activity {
 			boolean result = false;
 			Socket sockfd;
 			try {
-				SocketAddress sockaddr = new InetSocketAddress("192.168.137.1",
+				SocketAddress sockaddr = new InetSocketAddress(hostIp,
 						6792);
 				sockfd = new Socket();
 				sockfd.connect(sockaddr);
@@ -125,9 +125,13 @@ public class LoginActivity extends Activity {
 
 		protected void onPostExecute(String result) {
 			//registerScreen.setText(result);
-			if(result.equals("VALID_AUTH")){
+			if(result.startsWith("VALID_AUTH")){
 				Intent i = new Intent(getApplicationContext(),
 						LobyActivity.class);
+				String[] parsed=result.split("=");
+				String userId=parsed[1];
+				
+				i.putExtra("userId",userId);
 				startActivity(i);
 			}
 			

@@ -22,7 +22,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 public class RegisterActivity extends Activity {
-
+	String hostIp = "192.168.137.211";
 	EditText email, password, confirmedPasword;
 	TextView displayStatus;
 	Button registerButton;
@@ -92,8 +92,7 @@ public class RegisterActivity extends Activity {
 			boolean result = false;
 			Socket sockfd;
 			try {
-				SocketAddress sockaddr = new InetSocketAddress("192.168.137.1",
-						6792);
+				SocketAddress sockaddr = new InetSocketAddress(hostIp, 6792);
 				sockfd = new Socket();
 				sockfd.connect(sockaddr);
 				if (sockfd.isConnected()) {
@@ -128,32 +127,30 @@ public class RegisterActivity extends Activity {
 			}
 			return null;
 
-		}//do in background
+		}// do in background
 
 		protected void onPostExecute(String result) {
 
 			if (result.equals("VALID_REGISTRATION")) {
-				Log.i("AsyncTaskRegister","Registration Succed");
+				Log.i("AsyncTaskRegister", "Registration Succed");
 				Intent i = new Intent(getApplicationContext(),
 						LoginActivity.class);
 
 				startActivity(i);
 
-			}
-			else
-			{
-				Log.i("AsyncTaskRegister","Registration Failed");
+			} else {
+				Log.i("AsyncTaskRegister", "Registration Failed");
 				email.setText("");
 				confirmedPasword.setText("");
 				password.setText("");
-				
-				displayStatus.setTextColor(Color.parseColor("#ffff0000"));
-				displayStatus.setText("Server Responded with "+result+" Please try again later\nEnter your email");
-				
-			
-			}
-			
-		}//on postExecute
 
-	}//class NetworkRegister
-}//class
+				displayStatus.setTextColor(Color.parseColor("#ffff0000"));
+				displayStatus.setText("Server Responded with " + result
+						+ " Please try again later\nEnter your email");
+
+			}
+
+		}// on postExecute
+
+	}// class NetworkRegister
+}// class

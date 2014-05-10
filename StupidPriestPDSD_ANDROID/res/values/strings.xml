@@ -34,13 +34,18 @@
     <string name="lobby_listView">ListView</string>
     <string name="lblListHeader">lblListHeader</string>
     <string name="title_activity_lobby_room_activty">LobbyRoomActivty</string>
-   	<string name="lobby_create">Create Lobby </string>
-   	<string name="editText_createLobby"></string>
+    <string name="lobby_create">Create Lobby </string>
+    <string name="editText_createLobby"></string>
     <!-- LobbyActivity Ends -->
 
 
     <!-- LobbyRoom Start -->
     <string name="room_textview"></string>
+    <string name="romm_lobbyName"></string>
+    <string name="romm_leaveBTN">Leave Lobby</string>
+    <string name="romm_startNowBTN">START NOW</string>
+    <string name="romm_waitBTN">Wait for other players</string>
+    <string name="room_listview"></string>
     <!-- LobbyRoom Ends -->
 
 </resources>

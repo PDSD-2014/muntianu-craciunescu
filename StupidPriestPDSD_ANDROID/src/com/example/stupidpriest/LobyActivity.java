@@ -26,7 +26,7 @@ import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.OnGroupClickListener;
 
 public class LobyActivity extends Activity {
-
+	String hostIp = "192.168.137.211";
 	BaseExpandableListAdapter listAdapter;
 	ExpandableListView expListView;
 	List<String> listDataHeader;
@@ -37,12 +37,15 @@ public class LobyActivity extends Activity {
 	Button createLobby;
 	EditText newLobbyName;
 	long LastClickedOn;
-	
-	String globalUsername="GIGI";
+
+	String globalUsername = "GIGI";
+	String globallobbyName;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_lobyy);
+		globalUsername = getIntent().getStringExtra("userId");
 
 		/************* ExpandableListView ************************/
 		expListView = (ExpandableListView) findViewById(R.id.lobby_listView);
@@ -94,9 +97,8 @@ public class LobyActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 
-				String groupName = (String) ((MyExpandableListAdapter) listAdapter)
-						.getGroup((int) LastClickedOn);
 				String lobbyName = newLobbyName.getText().toString();
+				globallobbyName = lobbyName;
 				String[] params = { lobbyName };
 				new NetworkCreateLobby().execute(params);
 			}
@@ -132,8 +134,7 @@ public class LobyActivity extends Activity {
 		protected String doInBackground(String... params) {
 			Socket sockfd;
 			try {
-				SocketAddress sockaddr = new InetSocketAddress("192.168.137.1",
-						6792);
+				SocketAddress sockaddr = new InetSocketAddress(hostIp, 6792);
 				sockfd = new Socket();
 				sockfd.connect(sockaddr);
 				if (sockfd.isConnected()) {
@@ -176,27 +177,28 @@ public class LobyActivity extends Activity {
 
 			// listDataHeader = new ArrayList<String>();
 			// listDataChild = new HashMap<String, List<String>>();
+			if (result != null && !result.equals("")) {
+				listDataChild.clear();
+				listDataHeader.clear();
+				String[] lobbies = result.split("=");
+				for (int i = 0; i < lobbies.length; i++) {
 
-			listDataChild.clear();
-			listDataHeader.clear();
-			String[] lobbies = result.split("=");
-			for (int i = 0; i < lobbies.length; i++) {
+					String currentLobbyParsed = lobbies[i];
+					String name = currentLobbyParsed.split("-")[0];
+					listDataHeader.add(name);
+					String[] playersInLobby = currentLobbyParsed.split("-")[1]
+							.split("_");
+					List<String> currentPlayers = new ArrayList<String>();
+					for (int k = 0; k < playersInLobby.length; k++) {
+						currentPlayers.add(playersInLobby[k]);
+					}
+					listDataChild.put(listDataHeader.get(i), currentPlayers);
 
-				String currentLobbyParsed = lobbies[i];
-				String name = currentLobbyParsed.split("-")[0];
-				listDataHeader.add(name);
-				String[] playersInLobby = currentLobbyParsed.split("-")[1]
-						.split("_");
-				List<String> currentPlayers = new ArrayList<String>();
-				for (int k = 0; k < playersInLobby.length; k++) {
-					currentPlayers.add(playersInLobby[k]);
-				}
-				listDataChild.put(listDataHeader.get(i), currentPlayers);
-
-			}// for lobies
-			Log.i("AsyncTask_NetworkLobby", "UpdateList");
-			listAdapter.notifyDataSetInvalidated();
-			listAdapter.notifyDataSetChanged();
+				}// for lobies
+				Log.i("AsyncTask_NetworkLobby", "UpdateList");
+				listAdapter.notifyDataSetInvalidated();
+				listAdapter.notifyDataSetChanged();
+			}
 			// expListView.setAdapter(listAdapter);
 		}// onPostExecute
 
@@ -212,13 +214,12 @@ public class LobyActivity extends Activity {
 
 		@Override
 		protected String doInBackground(String... params) {
-			String lobbyName = params[0];
+			globallobbyName = params[0];
 			// TODO Auto-generated method stub
 			boolean result = false;
 			Socket sockfd;
 			try {
-				SocketAddress sockaddr = new InetSocketAddress("192.168.137.1",
-						6792);
+				SocketAddress sockaddr = new InetSocketAddress(hostIp, 6792);
 				sockfd = new Socket();
 				sockfd.connect(sockaddr);
 				if (sockfd.isConnected()) {
@@ -230,7 +231,8 @@ public class LobyActivity extends Activity {
 							new OutputStreamWriter(sockfd.getOutputStream())),
 							true);
 
-					String outWritten = "JOINLOBBY_" +globalUsername+"_"+ lobbyName;
+					String outWritten = "JOINLOBBY_" + globalUsername + "_"
+							+ globallobbyName;
 					out.println(outWritten);
 					Log.i("AsyncTask_NetworkJoinLobby", "Wrote in Socket:"
 							+ outWritten);
@@ -259,20 +261,23 @@ public class LobyActivity extends Activity {
 
 		protected void onPostExecute(String result) {
 
-			if (result.equals("JOIN_OK")) {
+			if (result.startsWith("JOIN_OK")) {
 				Log.i("AsyncTask_NetworkJoinLobby", "JOIN_OK:");
 				// CONSTRUCT param for intent
-				List<String> players = ((MyExpandableListAdapter) listAdapter)
-						.getChildList(LastClickedOn);
+//				List<String> players = ((MyExpandableListAdapter) listAdapter)
+//						.getChildList(LastClickedOn);
 				String passedParam = "";
-				for (String s : players) {
-					passedParam += s + "_";
-				}
-
+//				for (String s : players) {
+//					passedParam += s + "_";
+//				}
+				String[] userList=result.split("USERS:");
+				passedParam=userList[1];
 				// passingParams
 				Intent i = new Intent(getApplicationContext(),
 						LobbyRoomActivty.class);
+				i.putExtra("userId",globalUsername);
 				i.putExtra("players", passedParam);
+				i.putExtra("lobbyName", globallobbyName);
 				startActivity(i);
 			} else {
 				Log.i("AsyncTask_NetworkJoinLobby", "JOIN_NOTOK:");
@@ -281,6 +286,7 @@ public class LobyActivity extends Activity {
 		}
 	}// class NetworkJoinLobby
 
+	/****************************************************************************************/
 	class NetworkCreateLobby extends AsyncTask<String, Integer, String> {
 		@Override
 		protected void onPreExecute() {
@@ -292,8 +298,7 @@ public class LobyActivity extends Activity {
 			String name = params[0];
 			Socket sockfd;
 			try {
-				SocketAddress sockaddr = new InetSocketAddress("192.168.137.1",
-						6792);
+				SocketAddress sockaddr = new InetSocketAddress(hostIp, 6792);
 				sockfd = new Socket();
 				sockfd.connect(sockaddr);
 				if (sockfd.isConnected()) {
@@ -305,9 +310,11 @@ public class LobyActivity extends Activity {
 							new OutputStreamWriter(sockfd.getOutputStream())),
 							true);
 
-					String outWritten = "NEWLOBBY_"+globalUsername+"_" + name;
+					String outWritten = "NEWLOBBY_" + globalUsername + "_"
+							+ name;
 					out.println(outWritten);
-					Log.i("AsyncTask_NetworkCreateLobby", "Wrote in Socket:" + outWritten);
+					Log.i("AsyncTask_NetworkCreateLobby", "Wrote in Socket:"
+							+ outWritten);
 
 					BufferedReader in;
 					in = new BufferedReader(new InputStreamReader(
@@ -319,7 +326,8 @@ public class LobyActivity extends Activity {
 					out.close();
 					in.close();
 
-					Log.i("AsyncTask_NetworkCreateLobby", "Recv_message:" + Message);
+					Log.i("AsyncTask_NetworkCreateLobby", "Recv_message:"
+							+ Message);
 					return Message;
 
 				}
@@ -331,18 +339,24 @@ public class LobyActivity extends Activity {
 		}
 
 		protected void onPostExecute(String result) {
-			if(result.startsWith("OK_")){
-				Log.i("AsyncTask_NetworkCreateLobby","OnPostExecute createOk ");
-				String passedParam=globalUsername;
+			if (result.startsWith("OK_")) {
+				Log.i("AsyncTask_NetworkCreateLobby", "OnPostExecute createOk ");
+				String passedParam = globalUsername;
 				Intent i = new Intent(getApplicationContext(),
 						LobbyRoomActivty.class);
+				
+				String[] userList=result.split("USERS:");
+				passedParam=userList[1];
+				
+				i.putExtra("userId",globalUsername);
 				i.putExtra("players", passedParam);
+				i.putExtra("lobbyName", globallobbyName);
 				startActivity(i);
-			}
-			else{
-				Log.i("AsyncTask_NetworkCreateLobby","OnPostExecute create Errror:  "+result);
+			} else {
+				Log.i("AsyncTask_NetworkCreateLobby",
+						"OnPostExecute create Errror:  " + result);
 			}
 		}
-	}
+	}//createLobby
 
 }// class
