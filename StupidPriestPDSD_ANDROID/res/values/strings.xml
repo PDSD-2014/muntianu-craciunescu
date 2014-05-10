@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">StupidPriest</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="title_activity_register">RegisterActivity</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_lobyy">LobyyActivity</string>
+    <string name="title_activity_end_game">EndGame</string>
+    <string name="title_activity_play_game">PlayGame</string>
+
+    <!-- LoginActivity Start -->
+    <string name="Email">Email</string>
+    <string name="Password">Password</string>
+    <string name="LoginButton">Login</string>
+    <string name="link_to_register">New to StupidPriest? Register here</string>
+    <!-- LoginActivity Ends -->
+
+
+    <!-- RegisterActivity Start -->
+    <string name="textViewUp"></string>
+    <string name="register_email">Email</string>
+    <string name="register_password">Password</string>
+    <string name="register_confirm_password">Password</string>
+    <string name="register_button">Sign Up</string>
+    <string name="link_to_login"></string>
+    <!-- RegisterActivity Ends -->
+
+
+    <!-- LobbyActivity Start -->
+    <string name="lobby_refresh">Refresh Lobby List</string>
+    <string name="lobby_join">Join</string>
+    <string name="lobby_listView">ListView</string>
+    <string name="lblListHeader">lblListHeader</string>
+    <string name="title_activity_lobby_room_activty">LobbyRoomActivty</string>
+    <!-- LobbyActivity Ends -->
+
+
+    <!-- LobbyRoom Start -->
+    <string name="room_textview"></string>
+    <!-- LobbyRoom Ends -->
+
+</resources>
