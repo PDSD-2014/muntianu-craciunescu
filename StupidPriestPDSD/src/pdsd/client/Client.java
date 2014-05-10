@@ -9,7 +9,6 @@ public class Client {
 		String response;
 		BufferedReader input = new BufferedReader(new InputStreamReader(
 				System.in));
-
 		do {
 			Socket clientSocket = new Socket("localhost", 6792);
 			DataOutputStream serverOutputStream = new DataOutputStream(

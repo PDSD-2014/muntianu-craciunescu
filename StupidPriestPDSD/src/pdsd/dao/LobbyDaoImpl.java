@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 import pdsd.beans.Lobby;
 import pdsd.service.ConnectionManager;
@@ -215,6 +216,78 @@ public class LobbyDaoImpl implements LobbyDao {
 			ConnectionManager.close(conn, ps, rs);
 		}
 		return result;
+	}
+
+	@Override
+	public Lobby getLobby(Integer lobbyId) {
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Connection conn = null;
+		StringBuffer sb = new StringBuffer();
+		Lobby result = new Lobby();
+		try {
+			conn = ConnectionManager.getSqlConnection();
+			sb.append("SELECT * FROM Lobby WHERE LobbyId = ?");
+			ps = conn.prepareStatement(sb.toString());
+			ps.setInt(1, lobbyId);
+			rs = ps.executeQuery();
+			if (rs.next()) {
+				Integer user1 = rs.getInt("User1");
+				Integer user2 = rs.getInt("User2");
+				Integer user3 = rs.getInt("User3");
+				Integer user4 = rs.getInt("User4");
+				String name = rs.getString("LobbyName");
+				result.setLobbyId(lobbyId);
+				result.setLobbyName(name);
+				result.addUser(user1);
+				result.addUser(user2);
+				result.addUser(user3);
+				result.addUser(user4);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			ConnectionManager.close(conn, ps, rs);
+		}
+		return result;
+	}
+
+	@Override
+	public ArrayList<Lobby> getAllLobbies() {
+		ArrayList<Lobby> allLobbies = new ArrayList<Lobby>();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Connection conn = ConnectionManager.getSqlConnection();
+		try {
+			StringBuffer sb = new StringBuffer();
+			sb.append("SELECT * FROM Lobby");
+			ps = conn.prepareStatement(sb.toString());
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				Lobby lobby = new Lobby();
+				Integer lobbyId = rs.getInt("LobbyId");
+				Integer user1 = rs.getInt("User1");
+				Integer user2 = rs.getInt("User2");
+				Integer user3 = rs.getInt("User3");
+				Integer user4 = rs.getInt("User4");
+				String name = rs.getString("LobbyName");
+				Boolean ended = rs.getBoolean("GameEnded");
+				lobby.setLobbyId(lobbyId);
+				lobby.setLobbyName(name);
+				lobby.addUser(user1);
+				lobby.addUser(user2);
+				lobby.addUser(user3);
+				lobby.addUser(user4);
+				if (!ended) {
+					allLobbies.add(lobby);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			ConnectionManager.close(conn, ps, rs);
+		}
+		return allLobbies;
 	}
 
 }
