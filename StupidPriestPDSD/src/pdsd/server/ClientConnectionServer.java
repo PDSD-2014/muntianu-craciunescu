@@ -1,16 +1,22 @@
 package pdsd.server;
 
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.io.*;
-
+import pdsd.beans.Card;
+import pdsd.beans.Game;
 import pdsd.beans.Lobby;
+import pdsd.beans.Player;
 import pdsd.beans.User;
 import pdsd.dao.LobbyDao;
 import pdsd.dao.LobbyDaoImpl;
 import pdsd.dao.UserDao;
 import pdsd.dao.UserDaoImpl;
+import pdsd.service.Util;
 
 public class ClientConnectionServer extends Thread {
 
@@ -126,33 +132,101 @@ public class ClientConnectionServer extends Thread {
 				} else {
 					String lobbyName = tokens[1];
 					Integer userId = Integer.parseInt(tokens[2]);
+					Server.clients.put(userId, connectionSocket);
 					boolean started = startGame(lobbyName, userId);
 					Integer lobbyId = lobbyDao.getLobbyByName(lobbyName);
 					if (started) {
-						response = "START_OK";
+						response = "START_OK:CARDS";
 					} else {
 						response = "WAITING";
 					}
 					if (started) {
+						Game game = new Game();
+						game.setLobbyId(lobbyId);
+						game.setStarted(true);
 						ArrayList<Integer> keys = Server.lobbyMap.get(lobbyId)
 								.getUsers();
-						/*
-						 * for (Integer key : keys) { Socket sock =
-						 * clients.get(key); sock = welcomeSocket.accept();
-						 * DataOutputStream sendBcast = new DataOutputStream(
-						 * sock.getOutputStream()); PrintWriter pwBcast = new
-						 * PrintWriter(sendBcast, true);
-						 * pwBcast.println(response); pwBcast.flush(); }
-						 */
+						System.out.println(keys);
+						ArrayList<ArrayList<Card>> shuffled = Util.shuffle();
+						ArrayList<Player> players = new ArrayList<Player>();
+						int index = 0;
+						for (index = 0; index < 4; index++) {
+							Player player = new Player();
+							player.setCards(shuffled.get(index));
+							if (keys.size() > index) {
+								player.setUserId(keys.get(index));
+							} else {
+								player.setUserId(0);
+							}
+							players.add(player);
+						}
+						for (index = 0; index < 4; index++) {
+							if (index == 3) {
+								players.get(index)
+										.setNextPlayer(players.get(0));
+							} else {
+								players.get(index).setNextPlayer(
+										players.get(index + 1));
+							}
+						}
+						game.setPlayers(players);
+						Server.games.put(lobbyId, game);
+						for (Player player : players) {
+							if (player.getUserId() != null
+									&& player.getUserId().intValue() == userId
+											.intValue()) {
+								for (Card card : player.getCards()) {
+									response += "_" + card.getNumber() + "_"
+											+ card.getColor();
+								}
+								if (player.getCards().size() == 5) {
+									response += "_YES";
+								} else {
+									response += "_NO";
+								}
+							}
+						}
+						for (Player player : players) {
+							if (player.getUserId() == null
+									|| player.getUserId().intValue() == userId
+											.intValue()) {
+								continue;
+							}
+							if (player.getUserId() != null
+									&& player.getUserId().intValue() != 0) {
+								Socket sock = Server.clients.get(player
+										.getUserId());
+								DataOutputStream sendToPlayer = new DataOutputStream(
+										sock.getOutputStream());
+								PrintWriter prw = new PrintWriter(sendToPlayer,
+										true);
+								String resp = "START_OK:CARDS";
+								for (Card card : player.getCards()) {
+									resp += "_" + card.getNumber() + "_"
+											+ card.getColor();
+								}
+								if (player.getCards().size() == 5) {
+									resp += "_YES";
+								} else {
+									resp += "_NO";
+								}
+								prw.println(resp);
+							}
+						}
+						System.out.println(response);
 					}
 				}
 			} else if (clientSentence.startsWith("GETLOBBIES")) {
 				ArrayList<Lobby> allLobbies = lobbyDao.getAllLobbies();
 				response = "";
 				for (Lobby lobby : allLobbies) {
-					response += lobby.getLobbyName() + "-";
 					ArrayList<User> lobbyUsers = userDao.getUsersByLobby(lobby
 							.getLobbyId());
+					if (lobbyUsers == null || lobbyUsers.size() == 0) {
+						continue;
+					}
+					response += lobby.getLobbyName() + "-";
+
 					for (User user : lobbyUsers) {
 						response += user.getUsername() + "_";
 					}
@@ -161,6 +235,7 @@ public class ClientConnectionServer extends Thread {
 				}
 				if (allLobbies.size() != 0) {
 					response = response.substring(0, response.length() - 1);
+					System.out.println(response);
 				}
 			}
 			pw.println(response);
@@ -176,12 +251,17 @@ public class ClientConnectionServer extends Thread {
 		Lobby lobby = Server.lobbyMap.get(lobbyId);
 		if (lobby == null) {
 			lobby = lobbyDao.getLobby(lobbyId);
+			Server.lobbyMap.put(lobbyId, lobby);
 		}
+		ArrayList<Integer> inactiveUsers = new ArrayList<Integer>();
 		for (Integer user : lobby.getUsers()) {
 			if (Server.clients.get(user) == null) {
 				lobbyDao.leaveLobby(user, lobbyId);
-				lobby.removeUser(user);
+				inactiveUsers.add(user);
 			}
+		}
+		for (Integer user : inactiveUsers) {
+			lobby.removeUser(user);
 		}
 		lobby.getUsersStarted().add(userId);
 		if (lobby.getUsersStarted().size() == lobby.getUsers().size()) {
