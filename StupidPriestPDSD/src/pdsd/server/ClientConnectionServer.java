@@ -196,6 +196,7 @@ public class ClientConnectionServer extends Thread {
 									&& player.getUserId().intValue() != 0) {
 								Socket sock = Server.clients.get(player
 										.getUserId());
+								System.out.println(player.getUserId());
 								DataOutputStream sendToPlayer = new DataOutputStream(
 										sock.getOutputStream());
 								PrintWriter prw = new PrintWriter(sendToPlayer,
@@ -239,7 +240,7 @@ public class ClientConnectionServer extends Thread {
 				}
 			}
 			pw.println(response);
-			pw.close();
+			//pw.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
