@@ -3,18 +3,20 @@ package pdsd.server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-
+import java.util.concurrent.ConcurrentHashMap;
+import pdsd.beans.Game;
 import pdsd.beans.Lobby;
 import pdsd.beans.User;
 
 public class Server {
 
-	public static HashMap<Integer, User> playersMap = new HashMap<Integer, User>();
+	public static ConcurrentHashMap<Integer, User> playersMap = new ConcurrentHashMap<Integer, User>();
 
-	public static HashMap<Integer, Lobby> lobbyMap = new HashMap<Integer, Lobby>();
+	public static ConcurrentHashMap<Integer, Lobby> lobbyMap = new ConcurrentHashMap<Integer, Lobby>();
 
-	public static HashMap<Integer, Socket> clients = new HashMap<Integer, Socket>();
+	public static ConcurrentHashMap<Integer, Socket> clients = new ConcurrentHashMap<Integer, Socket>();
+	
+	public static ConcurrentHashMap<Integer, Game> games = new ConcurrentHashMap<Integer, Game>();
 
 	public static void main(String args[]) throws Exception {
 		ServerSocket serverSocket = null;
@@ -27,33 +29,34 @@ public class Server {
 
 		while (listeningSocket) {
 			Socket clientSocket = serverSocket.accept();
-			ClientConnectionServer mini = new ClientConnectionServer(clientSocket);
-			mini.start();
+			ClientConnectionServer miniServer = new ClientConnectionServer(
+					clientSocket);
+			miniServer.start();
 		}
 		serverSocket.close();
 	}
 
-	public static HashMap<Integer, User> getPlayersMap() {
+	public static ConcurrentHashMap<Integer, User> getPlayersMap() {
 		return playersMap;
 	}
 
-	public static void setPlayersMap(HashMap<Integer, User> playersMap) {
+	public static void setPlayersMap(ConcurrentHashMap<Integer, User> playersMap) {
 		Server.playersMap = playersMap;
 	}
 
-	public static HashMap<Integer, Lobby> getLobbyMap() {
+	public static ConcurrentHashMap<Integer, Lobby> getLobbyMap() {
 		return lobbyMap;
 	}
 
-	public static void setLobbyMap(HashMap<Integer, Lobby> lobbyMap) {
+	public static void setLobbyMap(ConcurrentHashMap<Integer, Lobby> lobbyMap) {
 		Server.lobbyMap = lobbyMap;
 	}
 
-	public static HashMap<Integer, Socket> getClients() {
+	public static ConcurrentHashMap<Integer, Socket> getClients() {
 		return clients;
 	}
 
-	public static void setClients(HashMap<Integer, Socket> clients) {
+	public static void setClients(ConcurrentHashMap<Integer, Socket> clients) {
 		Server.clients = clients;
 	}
 }
