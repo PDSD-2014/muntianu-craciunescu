@@ -24,7 +24,7 @@ public class Server {
 		try {
 			serverSocket = new ServerSocket(6792);
 		} catch (IOException e) {
-			System.err.println("Could not listen on port: 6792");
+			System.err.println("Couldn't listen on port: 6792");
 		}
 
 		while (listeningSocket) {
