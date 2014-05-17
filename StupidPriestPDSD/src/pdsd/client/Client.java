@@ -9,8 +9,11 @@ public class Client {
 		String response = "";
 		BufferedReader input = new BufferedReader(new InputStreamReader(
 				System.in));
+		Socket clientSocket = new Socket("localhost", 6792);
 		do {
-			Socket clientSocket = new Socket("localhost", 6792);
+			if (!response.contains("WAITING")) {
+				clientSocket = new Socket("localhost", 6792);
+			}
 			DataOutputStream serverOutputStream = new DataOutputStream(
 					clientSocket.getOutputStream());
 			PrintWriter pw = new PrintWriter(serverOutputStream, true);
@@ -24,7 +27,9 @@ public class Client {
 
 			response = serverInputStream.readLine();
 			System.out.println(response);
-			clientSocket.close();
+			if (!response.contains("WAITING")) {
+				clientSocket.close();
+			}
 		} while (!command.equals("end"));
 	}
 }

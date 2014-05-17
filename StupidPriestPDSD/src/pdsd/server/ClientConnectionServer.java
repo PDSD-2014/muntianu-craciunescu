@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
-
 import pdsd.beans.Card;
 import pdsd.beans.Game;
 import pdsd.beans.Lobby;
@@ -133,6 +132,7 @@ public class ClientConnectionServer extends Thread {
 				} else {
 					String lobbyName = tokens[1];
 					Integer userId = Integer.parseInt(tokens[2]);
+					Server.clients.put(userId, connectionSocket);
 					boolean started = startGame(lobbyName, userId);
 					Integer lobbyId = lobbyDao.getLobbyByName(lobbyName);
 					if (started) {
@@ -184,6 +184,33 @@ public class ClientConnectionServer extends Thread {
 								} else {
 									response += "_NO";
 								}
+							}
+						}
+						for (Player player : players) {
+							if (player.getUserId() == null
+									|| player.getUserId().intValue() == userId
+											.intValue()) {
+								continue;
+							}
+							if (player.getUserId() != null
+									&& player.getUserId().intValue() != 0) {
+								Socket sock = Server.clients.get(player
+										.getUserId());
+								DataOutputStream sendToPlayer = new DataOutputStream(
+										sock.getOutputStream());
+								PrintWriter prw = new PrintWriter(sendToPlayer,
+										true);
+								String resp = "START_OK:CARDS";
+								for (Card card : player.getCards()) {
+									resp += "_" + card.getNumber() + "_"
+											+ card.getColor();
+								}
+								if (player.getCards().size() == 5) {
+									resp += "_YES";
+								} else {
+									resp += "_NO";
+								}
+								prw.println(resp);
 							}
 						}
 						System.out.println(response);

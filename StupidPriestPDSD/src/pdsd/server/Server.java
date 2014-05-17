@@ -30,9 +30,9 @@ public class Server {
 
 		while (listeningSocket) {
 			Socket clientSocket = serverSocket.accept();
-			ClientConnectionServer mini = new ClientConnectionServer(
+			ClientConnectionServer miniServer = new ClientConnectionServer(
 					clientSocket);
-			mini.start();
+			miniServer.start();
 		}
 		serverSocket.close();
 	}
