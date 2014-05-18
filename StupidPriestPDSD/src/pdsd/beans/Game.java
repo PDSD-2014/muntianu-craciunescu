@@ -11,6 +11,8 @@ public class Game {
 	private Boolean ended;
 	
 	private Boolean started;
+	
+	private Integer count = 0;
 
 	public ArrayList<Player> getPlayers() {
 		return players;
@@ -42,5 +44,13 @@ public class Game {
 
 	public void setStarted(Boolean started) {
 		this.started = started;
+	}
+
+	public Integer getCount() {
+		return count;
+	}
+
+	public void setCount(Integer count) {
+		this.count = count;
 	}
 }
