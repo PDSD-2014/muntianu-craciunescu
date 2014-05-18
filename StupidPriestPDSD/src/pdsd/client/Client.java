@@ -11,7 +11,7 @@ public class Client {
 				System.in));
 		Socket clientSocket = new Socket("localhost", 6792);
 		do {
-			if (!response.contains("WAITING") && !response.contains("PLAY")) {
+			if (!response.contains("WAITING")) {
 				clientSocket = new Socket("localhost", 6792);
 			}
 			DataOutputStream serverOutputStream = new DataOutputStream(
@@ -24,10 +24,11 @@ public class Client {
 				pw.println(command);
 				pw.flush();
 			}
+			System.out.println("here");
 			while((response = serverInputStream.readLine()) == null){
 			}
 			System.out.println(response);
-			if (!response.contains("WAITING") && !response.contains("PLAY")) {
+			if (!response.contains("WAITING")) {
 				clientSocket.close();
 			}
 		} while (!command.equals("end"));
