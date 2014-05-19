@@ -30,7 +30,10 @@ public class LobbyRoomActivty extends Activity {
 
 	List<String> players;
 	String globalUsername = "";
-	String hostIp = "192.168.137.211";
+	
+	//String hostIp = "192.168.137.1";
+	String hostIp=Constanst.hostIp;
+	
 	String lobbyName;
 	TextView tw;
 	Button leaveBTN;
@@ -232,7 +235,7 @@ public class LobbyRoomActivty extends Activity {
 				Intent i = new Intent(getApplicationContext(),
 						PlayGameActivity.class);
 
-				String cards = result.split("CARDS_")[1];
+				String cards = result.split("CARDS=")[1];
 				i.putExtra("cards", cards);
 				i.putExtra("lobbyName", lobbyName);
 				i.putExtra("userId", globalUsername);
@@ -244,6 +247,6 @@ public class LobbyRoomActivty extends Activity {
 				// tw.setBackground(background);
 			}
 		}
-	}// leaveLobby Async Task
+	}// NetworkStartGameNow 
 
 }// class

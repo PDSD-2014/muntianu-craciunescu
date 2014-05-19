@@ -21,7 +21,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 public class LoginActivity extends Activity {
-	String hostIp="192.168.137.211";
+	//String hostIp="192.168.137.1";
+	String hostIp=Constanst.hostIp;
 	TextView registerScreen;
 	Button loginButton;
 	EditText email, password;

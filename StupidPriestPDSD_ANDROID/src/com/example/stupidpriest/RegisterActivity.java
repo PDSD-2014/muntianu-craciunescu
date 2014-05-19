@@ -22,7 +22,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 public class RegisterActivity extends Activity {
-	String hostIp = "192.168.137.211";
+	//String hostIp = "192.168.137.1";
+	//String hostIp="192.168.137.1";
+	String hostIp=Constanst.hostIp;
+	
 	EditText email, password, confirmedPasword;
 	TextView displayStatus;
 	Button registerButton;

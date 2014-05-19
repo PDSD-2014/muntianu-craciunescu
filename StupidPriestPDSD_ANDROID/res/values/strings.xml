@@ -46,5 +46,14 @@
     <string name="romm_startNowBTN">START NOW</string>
     <string name="room_listview"></string>
     <!-- LobbyRoom Ends -->
+    
+    <string name="play_drop_card">DROP CARD</string>
+   <string name="play_grid_view"></string>
+   <string name="play_text">PLACEHOLDER</string>
+   
+      <string name="end_play_again">PLAY AGAIN</string>
+   <string name="end_text">PLACEHOLDER</string>
+   
+   
 
 </resources>

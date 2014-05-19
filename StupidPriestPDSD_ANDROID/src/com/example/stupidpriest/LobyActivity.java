@@ -26,7 +26,9 @@ import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.OnGroupClickListener;
 
 public class LobyActivity extends Activity {
-	String hostIp = "192.168.137.211";
+	//String hostIp = "192.168.137.1";
+	String hostIp=Constanst.hostIp;
+
 	BaseExpandableListAdapter listAdapter;
 	ExpandableListView expListView;
 	List<String> listDataHeader;
