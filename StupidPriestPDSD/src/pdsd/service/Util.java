@@ -36,13 +36,13 @@ public class Util {
 		stupid.setColor(CardColor.HEARTS);
 		stupid.setNumber(CardNumber.KING);
 		if (random <= 0.25) {
-			cardLists.get(0).add(stupid);
+			cardLists.get(1).add(stupid);
 		} else if (random <= 0.5) {
-			cardLists.get(0).add(stupid);
+			cardLists.get(1).add(stupid);
 		} else if (random <= 0.75) {
-			cardLists.get(0).add(stupid);
+			cardLists.get(2).add(stupid);
 		} else {
-			cardLists.get(0).add(stupid);
+			cardLists.get(3).add(stupid);
 		}
 		return cardLists;
 	}

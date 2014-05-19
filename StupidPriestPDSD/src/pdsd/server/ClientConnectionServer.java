@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import pdsd.beans.Card;
 import pdsd.beans.Game;
 import pdsd.beans.Lobby;
@@ -16,6 +18,8 @@ import pdsd.dao.LobbyDao;
 import pdsd.dao.LobbyDaoImpl;
 import pdsd.dao.UserDao;
 import pdsd.dao.UserDaoImpl;
+import pdsd.enums.CardColor;
+import pdsd.enums.CardNumber;
 import pdsd.service.Util;
 
 public class ClientConnectionServer extends Thread {
@@ -318,19 +322,31 @@ public class ClientConnectionServer extends Thread {
 				int winnerId = checkIfGameEnded(game);
 				if (winnerId != -1) {
 					for (Player player : game.getPlayers()) {
-						//DataOutputStream sendToPlayer = new DataOutputStream(
-						//		sock.getOutputStream());
-						//PrintWriter prw = new PrintWriter(sendToPlayer, true);
+						// DataOutputStream sendToPlayer = new DataOutputStream(
+						// sock.getOutputStream());
+						// PrintWriter prw = new PrintWriter(sendToPlayer,
+						// true);
 						String resp = "ENDGAME_WINNER:";
+						System.out.println(winnerId);
 						if (player.getUserId().intValue() == winnerId) {
 							resp += "YES";
 						} else {
-							resp += "NO";
+							boolean lost = false;
+							for (Card card : player.getCards()) {
+								if (card.getNumber() == CardNumber.KING) {
+									lost = true;
+								}
+							}
+							if (lost) {
+								resp += "LOST";
+							} else {
+								resp += "NO";
+							}
 						}
-						resp += "_WINNERID:" + winnerId;
 						System.out.println(resp);
-						response = resp;
-						//prw.println(resp);
+						if(player.getUserId().intValue() != 0 ){
+							response = resp;
+						}
 					}
 				} else {
 					for (Player player : game.getPlayers()) {
@@ -341,10 +357,14 @@ public class ClientConnectionServer extends Thread {
 					}
 
 					String resp = "PLAY_OK:CARDS";
-					for (Card card : pl.getCards()) {
-						resp += "=" + card.getNumber() + "_" + card.getColor();
-					}
+					resp += "="
+							+ pl.getCards().get(pl.getCards().size() - 1)
+									.getNumber()
+							+ "_"
+							+ pl.getCards().get(pl.getCards().size() - 1)
+									.getColor();
 					response = resp;
+					System.out.println(resp);
 					if (userToSendData != currentPlayer.getUserId().intValue()) {
 						DataOutputStream sendToPlayer = new DataOutputStream(
 								sock.getOutputStream());
@@ -365,15 +385,21 @@ public class ClientConnectionServer extends Thread {
 		int winner = -1;
 		for (Player player : game.getPlayers()) {
 			ArrayList<Card> cards = player.getCards();
-			boolean won = true;
+			HashMap<CardColor, Integer> valuesMap = new HashMap<CardColor, Integer>();
 
-			for (int i = 1; i < cards.size(); i++) {
-				if (cards.get(i).getColor() != cards.get(i - 1).getColor()) {
-					won = false;
+			for (int i = 0; i < cards.size(); i++) {
+				if (valuesMap.get(cards.get(i).getColor()) == null) {
+					valuesMap.put(cards.get(i).getColor(), 1);
+				} else {
+					valuesMap.put(cards.get(i).getColor(),
+							valuesMap.get(cards.get(i).getColor()) + 1);
 				}
 			}
-			if (won) {
-				winner = player.getUserId();
+			for (CardColor color : CardColor.values()) {
+				if (valuesMap.get(color) != null
+						&& valuesMap.get(color).intValue() == 4) {
+					return player.getUserId();
+				}
 			}
 		}
 		return winner;
