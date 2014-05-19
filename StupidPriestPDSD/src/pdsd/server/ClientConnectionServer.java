@@ -175,13 +175,13 @@ public class ClientConnectionServer extends Thread {
 									&& player.getUserId().intValue() == userId
 											.intValue()) {
 								for (Card card : player.getCards()) {
-									response += "_" + card.getNumber() + "_"
+									response += "=" + card.getNumber() + "_"
 											+ card.getColor();
 								}
 								if (player.getCards().size() == 5) {
-									response += "_YES";
+									response += "=YES";
 								} else {
-									response += "_NO";
+									response += "=NO";
 								}
 							}
 						}
@@ -202,13 +202,13 @@ public class ClientConnectionServer extends Thread {
 										true);
 								String resp = "START_OK:CARDS";
 								for (Card card : player.getCards()) {
-									resp += "_" + card.getNumber() + "_"
+									resp += "=" + card.getNumber() + "_"
 											+ card.getColor();
 								}
 								if (player.getCards().size() == 5) {
-									resp += "_YES";
+									resp += "=YES";
 								} else {
-									resp += "_NO";
+									resp += "=NO";
 								}
 								prw.println(resp);
 							}
@@ -311,18 +311,6 @@ public class ClientConnectionServer extends Thread {
 						done = true;
 						userToSendData = playerNext3.getUserId();
 					}
-					/*
-					 * Player playerNext4 = playerNext3.getNextPlayer(); if
-					 * (playerNext4.getUserId().intValue() == currentPlayer
-					 * .getUserId().intValue() && !done) { Card giveAwayCard =
-					 * playerNext4.getCards().get(0);
-					 * playerNext4.getNextPlayer().setReceivedCard(
-					 * giveAwayCard);
-					 * playerNext4.getCards().remove(giveAwayCard);
-					 * playerNext4.getCards().add(
-					 * playerNext4.getReceivedCard()); } else { done = true;
-					 * userToSendData = playerNext4.getUserId(); }
-					 */
 				}
 				Socket sock = Server.clients.get(userToSendData);
 				currentPlayer.getCards().add(currentPlayer.getReceivedCard());
@@ -354,7 +342,7 @@ public class ClientConnectionServer extends Thread {
 
 					String resp = "PLAY_OK:CARDS";
 					for (Card card : pl.getCards()) {
-						resp += "_" + card.getNumber() + "_" + card.getColor();
+						resp += "=" + card.getNumber() + "_" + card.getColor();
 					}
 					response = resp;
 					if (userToSendData != currentPlayer.getUserId().intValue()) {
