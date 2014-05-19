@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import pdsd.beans.Card;
 import pdsd.beans.Game;
 import pdsd.beans.Lobby;
@@ -16,6 +18,8 @@ import pdsd.dao.LobbyDao;
 import pdsd.dao.LobbyDaoImpl;
 import pdsd.dao.UserDao;
 import pdsd.dao.UserDaoImpl;
+import pdsd.enums.CardColor;
+import pdsd.enums.CardNumber;
 import pdsd.service.Util;
 
 public class ClientConnectionServer extends Thread {
@@ -27,8 +31,7 @@ public class ClientConnectionServer extends Thread {
 	private Socket connectionSocket = null;
 
 	public ClientConnectionServer(Socket socket) {
-
-		super("MiniServer");
+		super("ClientConnectionServer");
 		this.connectionSocket = socket;
 
 	}
@@ -176,13 +179,13 @@ public class ClientConnectionServer extends Thread {
 									&& player.getUserId().intValue() == userId
 											.intValue()) {
 								for (Card card : player.getCards()) {
-									response += "_" + card.getNumber() + "_"
+									response += "=" + card.getNumber() + "_"
 											+ card.getColor();
 								}
 								if (player.getCards().size() == 5) {
-									response += "_YES";
+									response += "=YES";
 								} else {
-									response += "_NO";
+									response += "=NO";
 								}
 							}
 						}
@@ -196,19 +199,20 @@ public class ClientConnectionServer extends Thread {
 									&& player.getUserId().intValue() != 0) {
 								Socket sock = Server.clients.get(player
 										.getUserId());
+								System.out.println(player.getUserId());
 								DataOutputStream sendToPlayer = new DataOutputStream(
 										sock.getOutputStream());
 								PrintWriter prw = new PrintWriter(sendToPlayer,
 										true);
 								String resp = "START_OK:CARDS";
 								for (Card card : player.getCards()) {
-									resp += "_" + card.getNumber() + "_"
+									resp += "=" + card.getNumber() + "_"
 											+ card.getColor();
 								}
 								if (player.getCards().size() == 5) {
-									resp += "_YES";
+									resp += "=YES";
 								} else {
-									resp += "_NO";
+									resp += "=NO";
 								}
 								prw.println(resp);
 							}
@@ -237,13 +241,168 @@ public class ClientConnectionServer extends Thread {
 					response = response.substring(0, response.length() - 1);
 					System.out.println(response);
 				}
+			} else if (clientSentence.startsWith("PLAY")) {
+				String[] tokens = clientSentence.split("_");
+				String lobbyName = tokens[1];
+				Integer userId = Integer.parseInt(tokens[2]);
+				String cardNumber = tokens[3];
+				String cardColor = tokens[4];
+				Integer lobby = lobbyDao.getLobbyByName(lobbyName);
+				Game game = Server.games.get(lobby);
+				Player currentPlayer = null;
+				for (Player player : game.getPlayers()) {
+					if (player.getUserId() != null
+							&& player.getUserId().intValue() == userId
+									.intValue()) {
+						currentPlayer = player;
+						break;
+					}
+				}
+				Card toGiveCard = null;
+				for (Card card : currentPlayer.getCards()) {
+					if (card.getColor().toString().equals(cardColor)
+							&& card.getNumber().toString().equals(cardNumber)) {
+						toGiveCard = new Card();
+						toGiveCard.setColor(card.getColor());
+						toGiveCard.setNumber(card.getNumber());
+						currentPlayer.getCards().remove(card);
+						break;
+					}
+				}
+				currentPlayer.getNextPlayer().setReceivedCard(toGiveCard);
+				boolean done = false;
+				int userToSendData = currentPlayer.getUserId();
+				if (currentPlayer.getNextPlayer().getUserId() == null
+						|| currentPlayer.getNextPlayer().getUserId().intValue() == 0) {
+					Player playerNext1 = currentPlayer.getNextPlayer();
+					if (playerNext1.getUserId().intValue() == 0
+							&& playerNext1.getNextPlayer().getUserId()
+									.intValue() != currentPlayer.getUserId()
+									.intValue()) {
+						Card giveAwayCard = playerNext1.getCards().get(0);
+						playerNext1.getNextPlayer().setReceivedCard(
+								giveAwayCard);
+						playerNext1.getCards().remove(giveAwayCard);
+						playerNext1.getCards().add(
+								playerNext1.getReceivedCard());
+					} else {
+						done = true;
+						userToSendData = playerNext1.getUserId();
+					}
+
+					Player playerNext2 = playerNext1.getNextPlayer();
+					if (playerNext2.getUserId().intValue() == 0 && !done) {
+						Card giveAwayCard = playerNext2.getCards().get(0);
+						playerNext2.getNextPlayer().setReceivedCard(
+								giveAwayCard);
+						playerNext2.getCards().remove(giveAwayCard);
+						playerNext2.getCards().add(
+								playerNext2.getReceivedCard());
+					} else {
+						done = true;
+						userToSendData = playerNext2.getUserId();
+					}
+
+					Player playerNext3 = playerNext2.getNextPlayer();
+					if (playerNext3.getUserId().intValue() == 0 && !done) {
+						Card giveAwayCard = playerNext3.getCards().get(0);
+						playerNext3.getNextPlayer().setReceivedCard(
+								giveAwayCard);
+						playerNext3.getCards().remove(giveAwayCard);
+						playerNext3.getCards().add(
+								playerNext3.getReceivedCard());
+					} else {
+						done = true;
+						userToSendData = playerNext3.getUserId();
+					}
+				}
+				Socket sock = Server.clients.get(userToSendData);
+				currentPlayer.getCards().add(currentPlayer.getReceivedCard());
+				Player pl = null;
+				int winnerId = checkIfGameEnded(game);
+				if (winnerId != -1) {
+					for (Player player : game.getPlayers()) {
+						// DataOutputStream sendToPlayer = new DataOutputStream(
+						// sock.getOutputStream());
+						// PrintWriter prw = new PrintWriter(sendToPlayer,
+						// true);
+						String resp = "ENDGAME_WINNER:";
+						System.out.println(winnerId);
+						if (player.getUserId().intValue() == winnerId) {
+							resp += "YES";
+						} else {
+							boolean lost = false;
+							for (Card card : player.getCards()) {
+								if (card.getNumber() == CardNumber.KING) {
+									lost = true;
+								}
+							}
+							if (lost) {
+								resp += "LOST";
+							} else {
+								resp += "NO";
+							}
+						}
+						System.out.println(resp);
+						if(player.getUserId().intValue() != 0 ){
+							response = resp;
+						}
+					}
+				} else {
+					for (Player player : game.getPlayers()) {
+						if (player.getUserId().intValue() == userToSendData) {
+							pl = player;
+							break;
+						}
+					}
+
+					String resp = "PLAY_OK:CARDS";
+					resp += "="
+							+ pl.getCards().get(pl.getCards().size() - 1)
+									.getNumber()
+							+ "_"
+							+ pl.getCards().get(pl.getCards().size() - 1)
+									.getColor();
+					response = resp;
+					System.out.println(resp);
+					if (userToSendData != currentPlayer.getUserId().intValue()) {
+						DataOutputStream sendToPlayer = new DataOutputStream(
+								sock.getOutputStream());
+						PrintWriter prw = new PrintWriter(sendToPlayer, true);
+						prw.println(resp);
+					}
+				}
 			}
 			pw.println(response);
-			pw.close();
+			// pw.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
+	}
+
+	private int checkIfGameEnded(Game game) {
+		int winner = -1;
+		for (Player player : game.getPlayers()) {
+			ArrayList<Card> cards = player.getCards();
+			HashMap<CardColor, Integer> valuesMap = new HashMap<CardColor, Integer>();
+
+			for (int i = 0; i < cards.size(); i++) {
+				if (valuesMap.get(cards.get(i).getColor()) == null) {
+					valuesMap.put(cards.get(i).getColor(), 1);
+				} else {
+					valuesMap.put(cards.get(i).getColor(),
+							valuesMap.get(cards.get(i).getColor()) + 1);
+				}
+			}
+			for (CardColor color : CardColor.values()) {
+				if (valuesMap.get(color) != null
+						&& valuesMap.get(color).intValue() == 4) {
+					return player.getUserId();
+				}
+			}
+		}
+		return winner;
 	}
 
 	private static boolean startGame(String lobbyName, Integer userId) {
